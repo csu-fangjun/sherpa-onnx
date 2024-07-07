@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-from dataclasses import dataclass
 
 import jinja2
 
@@ -26,17 +25,28 @@ def get_args():
     return parser.parse_args()
 
 
-@dataclass
 class TtsModel:
-    model_dir = ""
-    model_name = ""
-    lang = ""
-    rule_fsts = None
-    rule_fars = None
-    data_dir = None
-    dict_dir = None
-    is_char = False
-    lang_iso_639_3 = ""
+    def __init__(
+        self,
+        model_dir="",
+        model_name="",
+        lang="",
+        rule_fsts=None,
+        rule_fars=None,
+        data_dir=None,
+        dict_dir=None,
+        is_char=None,
+        lang_iso_639_3="",
+    ):
+        self.model_dir = model_dir
+        self.model_name = model_name
+        self.lang = lang
+        self.rule_fsts = rule_fsts
+        self.rule_fars = rule_fars
+        self.data_dir = data_dir
+        self.dict_dir = dict_dir
+        self.is_char = is_char
+        self.lang_iso_639_3 = lang_iso_639_3
 
 
 def convert_lang_to_iso_639_3(models):
@@ -335,7 +345,7 @@ def get_vits_models():
 
     rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
     for m in chinese_models:
-        s = [f"{m.model_dir}/{r}" for r in rule_fsts]
+        s = ["{model_dir}/{r}".format(model_dir=m.model_dir, r=r) for r in rule_fsts]
         if "vits-zh-hf" in m.model_dir:
             s = s[:-1]
             m.dict_dir = m.model_dir + "/dict"
@@ -343,7 +353,7 @@ def get_vits_models():
         m.rule_fsts = ",".join(s)
 
         if "vits-zh-hf" not in m.model_dir:
-            m.rule_fars = f"{m.model_dir}/rule.far"
+            m.rule_fars = "{model_dir}/rule.far".format(model_dir=m.model_dir)
 
     all_models = chinese_models + [
         TtsModel(
@@ -379,7 +389,11 @@ def main():
 
     num_per_runner = num_models // total
     if num_per_runner <= 0:
-        raise ValueError(f"num_models: {num_models}, num_runners: {total}")
+        raise ValueError(
+            "num_models: {num_models}, num_runners: {total}".format(
+                num_models=num_models, total=total
+            )
+        )
 
     start = index * num_per_runner
     end = start + num_per_runner
