@@ -2,7 +2,6 @@
 
 import argparse
 from dataclasses import dataclass
-from typing import List, Optional
 
 import jinja2
 
@@ -29,24 +28,24 @@ def get_args():
 
 @dataclass
 class TtsModel:
-    model_dir: str
-    model_name: str = ""
-    lang: str = ""  # en, zh, fr, de, etc.
-    rule_fsts: Optional[List[str]] = None
-    rule_fars: Optional[List[str]] = None
-    data_dir: Optional[str] = None
-    dict_dir: Optional[str] = None
-    is_char: bool = False
-    lang_iso_639_3: str = ""
+    model_dir = ""
+    model_name = ""
+    lang = ""
+    rule_fsts = None
+    rule_fars = None
+    data_dir = None
+    dict_dir = None
+    is_char = False
+    lang_iso_639_3 = ""
 
 
-def convert_lang_to_iso_639_3(models: List[TtsModel]):
+def convert_lang_to_iso_639_3(models):
     for m in models:
         if m.lang_iso_639_3 == "":
             m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
-def get_coqui_models() -> List[TtsModel]:
+def get_coqui_models():
     # English (coqui-ai/TTS)
     models = [
         TtsModel(model_dir="vits-coqui-en-ljspeech"),
@@ -91,7 +90,7 @@ def get_coqui_models() -> List[TtsModel]:
     return models + character_models
 
 
-def get_piper_models() -> List[TtsModel]:
+def get_piper_models():
     models = [
         #  TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
         #  TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
@@ -229,7 +228,7 @@ def get_piper_models() -> List[TtsModel]:
     return models
 
 
-def get_mimic3_models() -> List[TtsModel]:
+def get_mimic3_models():
     models = [
         TtsModel(model_dir="vits-mimic3-af_ZA-google-nwu_low"),
         TtsModel(model_dir="vits-mimic3-bn-multi_low"),
@@ -252,7 +251,7 @@ def get_mimic3_models() -> List[TtsModel]:
     return models
 
 
-def get_vits_models() -> List[TtsModel]:
+def get_vits_models():
     chinese_models = [
         # Chinese
         TtsModel(
