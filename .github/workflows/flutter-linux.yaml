@@ -14,7 +14,7 @@ concurrency:
   group: flutter-linux-${{ github.ref }}
   cancel-in-progress: true
 
-# See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044 
+# See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044
 env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
@@ -22,7 +22,7 @@ jobs:
   tts:
     name: tts ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
-    container: ubuntu:18.04
+    container: ubuntu:16.04
     strategy:
       fail-fast: false
       matrix:
@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y bc curl git-lfs
+          apt-get install -y bc curl
 
       # Ubuntu 18.04 uses cmake 3.10 by default, but we need cmake >= 3.11
       - name: Install cmake
