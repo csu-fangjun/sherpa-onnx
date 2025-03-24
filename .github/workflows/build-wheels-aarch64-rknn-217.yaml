@@ -14,81 +14,71 @@ concurrency:
 jobs:
   build_wheels_aarch64_rknn_217:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04-arm]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        manylinux: [manylinux_2_34, manylinux2014, manylinux_2_24, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece setuptools wheel
+          python3 -m pip install --upgrade pip setuptools wheel
 
-      - name: Download rknn-toolkit2
-        shell: bash
-        run: |
-          git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
+      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
+      # for a list of versions
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_BEFORE_ALL: |
+            git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
 
-      - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2010_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/shared
-            shell: bash
-            run: |
-              echo "config: ${{ matrix.config }}"
+          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-aarch64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=0" SHERPA_ONNX_ENABLE_ALSA=1 SHERPA_ONNX_RKNN_TOOLKIT2_PATH=/project/rknn-toolkit2 SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64 CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON -DSHERPA_ONNX_USE_CXX11_ABI=ON"
 
-              cmake --version
-
-              echo "config: ${{ matrix.config }}"
-              uname -a
-              which gcc
-
-              gcc --version
-              g++ --version
-
-              echo "pwd"
-
-              ls -lh
-
-              cd /shared
-
-              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-              cd alsa-lib
-              ./gitcompile
-              cd ..
-              echo "PWD"
-              ls -lh $PWD/alsa-lib/src/.libs
-              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
-              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
-              export LD_LIBRARY_PATH=$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH
-
-              export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
-              export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
-              export CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH
-
-              export SHERPA_ONNX_ENABLE_ALSA=1
-
-              export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON"
-              python3 setup.py bdist_wheel
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
 
       - name: Display results
         shell: bash
         run: |
-          ls -lh dist
+          ls -lh ./wheelhouse/
+
+      - name: Install patchelf
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+          patchelf --help
+
+      - name: Patch wheels
+        shell: bash
+        run: |
+          mkdir ./wheels
+          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
+
+          ls -lh ./wheels/
+          rm -rf ./wheelhouse
+          mv ./wheels ./wheelhouse
 
       - name: Publish to huggingface
         env:
@@ -119,7 +109,7 @@ jobs:
 
             mkdir -p $d
 
-            cp -v ../dist/*.whl $d/
+            cp -v ../wheelhouse/*.whl $d/
 
             git status
             git add .
@@ -129,4 +119,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.python-version }}
-          path: ./dist/*.whl
+          path: ./wheelhouse/*.whl

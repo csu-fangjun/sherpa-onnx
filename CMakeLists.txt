@@ -47,6 +47,7 @@ option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-i
 option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ON)
 option(SHERPA_ONNX_ENABLE_RKNN "Whether to build for RKNN NPU " OFF)
+option(SHERPA_ONNX_USE_CXX11_ABI "ON to use _GLIBCXX_USE_CXX11_ABI=1. OFF to use _GLIBCXX_USE_CXX11_ABI=0 " OFF)
 
 set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. Set to 1.11.0 if you use CUDA 10.2 and cudnn8. Set it to 1.16.0 if you use CUDA 11.4 and cudnn8. Set it to 1.18.0 if you use CUDA 12.2 and cudnn8. Set it to 1.18.1 if you use CUDA 12.6 and cudnn9")
 
@@ -180,6 +181,14 @@ if(BUILD_SHARED_LIBS AND NOT CMAKE_SYSTEM_NAME STREQUAL iOS AND CMAKE_BUILD_TYPE
   else()
     message(STATUS "IPO is not available")
   endif()
+endif()
+
+if(SHERPA_ONNX_USE_CXX11_ABI)
+  message(STATUS "Use _GLIBCXX_USE_CXX11_ABI=1")
+  add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+else()
+  message(STATUS "Use _GLIBCXX_USE_CXX11_ABI=0")
+  add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
