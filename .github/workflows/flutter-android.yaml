@@ -188,16 +188,31 @@ jobs:
 
           mv -v *.apk ./apks
 
-      # https://github.com/marketplace/actions/sign-android-release
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        with:
-          releaseDirectory: ./apks
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+      - name: Sign APK
+        shell: bash
         env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        run: |
+          echo "$ANDROID_SIGNING_KEY" | base64 -d > signingKey.jks
+
+          cd apks
+          for apk in *.apk; do
+            echo "Signing $apk"
+            aligned="${apk%.apk}-aligned.apk"
+            signed="${apk%.apk}-signed.apk"
+            /usr/local/lib/android/sdk/build-tools/$BUILD_TOOL_VERSION/zipalign -f 4 "$apk" "$aligned"
+            /usr/local/lib/android/sdk/build-tools/$BUILD_TOOL_VERSION/apksigner sign \
+              --ks ../signingKey.jks \
+              --ks-key-alias "$ANDROID_SIGNING_KEY_ALIAS" \
+              --ks-pass "pass:$ANDROID_SIGNING_KEY_STORE_PASSWORD" \
+              --out "$signed" \
+              "$aligned"
+          done
+          cd ..
+
+          rm -fv signingKey.jks
 
       - name: Display APK after signing
         shell: bash
@@ -209,7 +224,6 @@ jobs:
         shell: bash
         run: |
           cd apks
-          rm -fv signingKey.jks
           rm -fv *.apk.idsig
           rm -fv *-aligned.apk
 
@@ -440,16 +454,31 @@ jobs:
 
           mv -v *.apk ./apks
 
-      # https://github.com/marketplace/actions/sign-android-release
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        with:
-          releaseDirectory: ./apks
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+      - name: Sign APK
+        shell: bash
         env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        run: |
+          echo "$ANDROID_SIGNING_KEY" | base64 -d > signingKey.jks
+
+          cd apks
+          for apk in *.apk; do
+            echo "Signing $apk"
+            aligned="${apk%.apk}-aligned.apk"
+            signed="${apk%.apk}-signed.apk"
+            /usr/local/lib/android/sdk/build-tools/$BUILD_TOOL_VERSION/zipalign -f 4 "$apk" "$aligned"
+            /usr/local/lib/android/sdk/build-tools/$BUILD_TOOL_VERSION/apksigner sign \
+              --ks ../signingKey.jks \
+              --ks-key-alias "$ANDROID_SIGNING_KEY_ALIAS" \
+              --ks-pass "pass:$ANDROID_SIGNING_KEY_STORE_PASSWORD" \
+              --out "$signed" \
+              "$aligned"
+          done
+          cd ..
+
+          rm -fv signingKey.jks
 
       - name: Display APK after signing
         shell: bash
@@ -461,7 +490,6 @@ jobs:
         shell: bash
         run: |
           cd apks
-          rm -fv signingKey.jks
           rm -fv *.apk.idsig
           rm -fv *-aligned.apk
 
