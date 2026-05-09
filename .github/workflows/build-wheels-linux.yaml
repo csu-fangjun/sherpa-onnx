@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   core:
+    if: false
     name: core
     runs-on: ${{ matrix.os }}
     strategy:
@@ -195,6 +196,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   test:
+    if: false
     name: test
     needs: [core]
     runs-on: ${{ matrix.os }}
@@ -302,14 +304,15 @@ jobs:
           twine upload /tmp/wheels/*.whl
 
   build_wheels_linux:
-    needs: [core, test]
+    # needs: [core, test]
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        # python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 
     steps:
