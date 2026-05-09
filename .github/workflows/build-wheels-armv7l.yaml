@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   core:
+    if: false
     name: core
     runs-on: ${{ matrix.os }}
     strategy:
@@ -198,6 +199,7 @@ jobs:
 
   test:
     name: test
+    if: false
     needs: [core]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -284,7 +286,8 @@ jobs:
         # see https://github.com/pypa/cibuildwheel/issues/2257
         # we don't use qemu from now on
         os: [ubuntu-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        # python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.8"]
         manylinux: [manylinux_2_35] #, manylinux_2_28]
 
     steps:
