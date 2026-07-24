@@ -271,7 +271,7 @@ python3 ./python-api-examples/offline-sense-voice-ctc-decode-files-with-hr.py
 
 rm -rf dict replace.fst test-hr.wav lexicon.txt
 
-if [[ $(uname) == Linux ]]; then
+if command -v ffmpeg &> /dev/null; then
   # It needs ffmpeg
   log  "generate subtitles (Chinese)"
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
