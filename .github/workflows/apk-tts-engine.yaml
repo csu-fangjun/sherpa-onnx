@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   generate_matrix:
-    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
