@@ -199,7 +199,7 @@ jobs:
           tag: xcframework
 
       - name: Release xcframework (csukuangfj)
-        if: github.repository_owner == 'csukuangfj'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'csu-fangjun'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
