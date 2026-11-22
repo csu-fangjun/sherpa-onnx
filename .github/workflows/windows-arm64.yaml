@@ -269,7 +269,7 @@ jobs:
           echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
           echo "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
       - name: Release pre-compiled binaries and libs for Windows arm64
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
